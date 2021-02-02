@@ -14,10 +14,25 @@ outputExcelFile = r'C:/Users/Georges/Downloads/'+str(today)+' Stats Hivebrite.xl
 # For now from an Excel import, later we will use the API
 inputExcelFile = r'C:/Users/Georges/Downloads/User_export_'+str(today)+'.xlsx'
 df = pd.read_excel(inputExcelFile, sheet_name='Export', engine='openpyxl',
-                   usecols=['Email', 'Live Location:Country', 'Industries:Industries',
-                            '_8f70fe1e_Occupation', '_ed5be3a0_How_did_you_hear_about_us_',
-                            'Last Membership:Type name'
+                   usecols=['ID', 'Email', 'Account activation date', 'Live Location:Country', 'Industries:Industries',
+                            '_8f70fe1e_Occupation', '_ed5be3a0_How_did_you_hear_about_us_', 'Last Membership:Type name'
                             ])
+
+# COUNT ACTIVATION
+activeUsers = df['Account activation date'].count()
+nonActiveUsers = df['Account activation date'].isna().sum()
+allUsers = df['ID'].count()
+
+myLabels = []
+myCounts = []
+myLabels.extend(('Confirmed', 'Unconfirmed', 'Total'))
+myCounts.extend((activeUsers, nonActiveUsers, allUsers))
+
+ActivationDict = list(zip(myLabels, myCounts))
+df_ActivationCount = pd.DataFrame(ActivationDict, columns =['Users', 'Total'])
+
+df_ActivationCount['%'] = (df_ActivationCount['Total'] / allUsers) * 100
+df_ActivationCount['%'] = df_ActivationCount['%'].round(decimals=1)
 
 # COUNT COUNTRY
 df_Country_count = pd.DataFrame(df.groupby(['Live Location:Country'], dropna=False).size(), columns=['Total'])\
@@ -98,6 +113,7 @@ df_Membership_count['Percent'] = df_Membership_count['Percent'].round(decimals=1
 # EXCEL FILE
 writer = pd.ExcelWriter(outputExcelFile, engine='xlsxwriter')
 
+df_ActivationCount.to_excel(writer, index=False, sheet_name='Status', header=True)
 df_Country_count.to_excel(writer, index=False, sheet_name='Countries', header=['Country', 'Total', '%'])
 df_Categories_count.to_excel(writer, index=False, sheet_name='Categories', header=['Category', 'Total', '%'])
 df_Specialties_count.to_excel(writer, index=False, sheet_name='Specialties', header=['Specialty', 'Total', '%'])
@@ -109,19 +125,33 @@ df_Membership_count.to_excel(writer, index=False, sheet_name='Memberships', head
 
 writer.save()
 
-# EXCEL FILTERS AND COLORS
+# EXCEL FILTERS
 workbook = openpyxl.load_workbook(outputExcelFile)
 sheetsLits = workbook.sheetnames
 
 for sheet in sheetsLits:
+    if sheet == 'Status':
+        continue
     worksheet = workbook[sheet]
     FullRange = 'A1:' + get_column_letter(worksheet.max_column) + str(worksheet.max_row)
     worksheet.auto_filter.ref = FullRange
+    workbook.save(outputExcelFile)
 
+# EXCEL COLORS
+for sheet in sheetsLits:
+    worksheet = workbook[sheet]
     for cell in workbook[sheet][1]:
         worksheet[cell.coordinate].fill = PatternFill(fgColor = 'FFC6C1C1', fill_type = 'solid')
+        workbook.save(outputExcelFile)
 
-    workbook.save(outputExcelFile)
+# EXCEL COLUMN SIZE
+for sheet in sheetsLits:
+    for cell in workbook[sheet][1]:
+        if get_column_letter(cell.column) == 'A':
+            workbook[sheet].column_dimensions[get_column_letter(cell.column)].width = 30
+        else:
+            workbook[sheet].column_dimensions[get_column_letter(cell.column)].width = 10
+        workbook.save(outputExcelFile)
 
 # TERMINAL OUTPUTS
 print(tab(df_Country_count.head(10), headers='keys', tablefmt='psql', showindex=False))
@@ -132,5 +162,6 @@ print(tab(df_Industries_count.head(10), headers='keys', tablefmt='psql', showind
 print(tab(df_Email_DNS_count.head(10), headers='keys', tablefmt='psql', showindex=False))
 print(tab(df_HowDidYouHearAboutUs_count, headers='keys', tablefmt='psql', showindex=False))
 print(tab(df_Membership_count, headers='keys', tablefmt='psql', showindex=False))
+print(tab(df_ActivationCount, headers='keys', tablefmt='psql', showindex=False))
 print(today)
 print("OK, export done!")
