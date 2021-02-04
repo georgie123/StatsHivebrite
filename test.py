@@ -1,25 +1,17 @@
-from datetime import date
-import openpyxl
-from openpyxl.utils import get_column_letter
 
-today = date.today()
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
-outputExcelFile = r'C:/Users/Georges/Downloads/'+str(today)+' Stats Hivebrite.xlsx'
-workbook = openpyxl.load_workbook(outputExcelFile)
-sheetsLits = workbook.sheetnames
+pdf = PdfPages('C:/Users/Georges/Downloads/multipage.pdf')
 
+fig1 = plt.figure()
+plt.plot([0,1,2,3,4])
+plt.close()
+pdf.savefig(fig1)
 
-# EXCEL COLUMN SIZE
-for sheet in sheetsLits:
-    for cell in workbook[sheet][1]:
-        if get_column_letter(cell.column) == 'A':
-            workbook[sheet].column_dimensions[get_column_letter(cell.column)].width = 30
-        else:
-            workbook[sheet].column_dimensions[get_column_letter(cell.column)].width = 10
+fig2 = plt.figure()
+plt.plot([0,2,4,6,8])
+plt.close()
+pdf.savefig(fig2)
 
-        workbook.save(outputExcelFile)
-
-
-
-# ws.column_dimensions['A'].width = 75
-# wb.save("C:/Users/Georges/Downloads/2021-02-02 Stats Hivebrite.xlsx")
+pdf.close()

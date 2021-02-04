@@ -1,7 +1,10 @@
+import os
 from datetime import date
+from tabulate import tabulate as tab
 
 import pandas as pd
-from tabulate import tabulate as tab
+import matplotlib.pyplot as plt
+from PIL import Image, ImageOps
 
 import openpyxl
 from openpyxl.styles import PatternFill
@@ -18,17 +21,18 @@ df = pd.read_excel(inputExcelFile, sheet_name='Export', engine='openpyxl',
                             '_8f70fe1e_Occupation', '_ed5be3a0_How_did_you_hear_about_us_', 'Last Membership:Type name'
                             ])
 
+
 # COUNT ACTIVATION
 activeUsers = df['Account activation date'].count()
 nonActiveUsers = df['Account activation date'].isna().sum()
 allUsers = df['ID'].count()
 
-myLabels = []
+activationLabel = []
 myCounts = []
-myLabels.extend(('Confirmed', 'Unconfirmed', 'Total'))
+activationLabel.extend(('Confirmed', 'Unconfirmed', 'Total'))
 myCounts.extend((activeUsers, nonActiveUsers, allUsers))
 
-ActivationDict = list(zip(myLabels, myCounts))
+ActivationDict = list(zip(activationLabel, myCounts))
 df_ActivationCount = pd.DataFrame(ActivationDict, columns =['Users', 'Total'])
 
 df_ActivationCount['%'] = (df_ActivationCount['Total'] / allUsers) * 100
@@ -110,6 +114,7 @@ df_Membership_count = df_Membership_count.fillna('Basic Membership')
 df_Membership_count['Percent'] = (df_Membership_count['Total'] / df_Membership_count['Total'].sum()) * 100
 df_Membership_count['Percent'] = df_Membership_count['Percent'].round(decimals=1)
 
+
 # EXCEL FILE
 writer = pd.ExcelWriter(outputExcelFile, engine='xlsxwriter')
 
@@ -153,15 +158,73 @@ for sheet in sheetsLits:
             workbook[sheet].column_dimensions[get_column_letter(cell.column)].width = 10
         workbook.save(outputExcelFile)
 
+
+# CHART USERS STATUS
+activationLabel.pop()
+
+activationValue = []
+activationValue.extend([activeUsers, nonActiveUsers])
+
+colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+fig1 = plt.figure()
+plt.pie(activationValue, labels=activationLabel, colors=colors, autopct='%1.1f%%', shadow=False, startangle=90)
+plt.axis('equal')
+plt.title('User status', pad=20, fontsize=15)
+
+fig1.savefig('C:/Users/Georges/Downloads/myplot1.png', dpi=75)
+# plt.show()
+plt.clf()
+
+im = Image.open('C:/Users/Georges/Downloads/myplot1.png')
+bordered = ImageOps.expand(im, border=1, fill=(0, 0, 0))
+bordered.save('C:/Users/Georges/Downloads/myplot1.png')
+
+# INSERT CHART IN EXCEL
+img = openpyxl.drawing.image.Image('C:/Users/Georges/Downloads/myplot1.png')
+img.anchor = 'E6'
+
+workbook['Status'].add_image(img)
+workbook.save(outputExcelFile)
+
+# CHART CATEGORIES
+chartLabel = df_Categories_count['Categories'].tolist()
+chartValue = df_Categories_count['Total'].tolist()
+
+colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+fig2 = plt.figure()
+plt.pie(chartValue, labels=chartLabel, colors=colors, autopct='%1.1f%%', shadow=False, startangle=90)
+plt.axis('equal')
+plt.title("Categories", pad=20, fontsize=15)
+
+fig2.savefig('C:/Users/Georges/Downloads/myplot2.png', dpi=75)
+# plt.show()
+plt.clf()
+
+im = Image.open('C:/Users/Georges/Downloads/myplot2.png')
+bordered = ImageOps.expand(im, border=1, fill=(0, 0, 0))
+bordered.save('C:/Users/Georges/Downloads/myplot2.png')
+
+# INSERT IN EXCEL
+img = openpyxl.drawing.image.Image('C:/Users/Georges/Downloads/myplot2.png')
+img.anchor = 'E6'
+
+workbook['Categories'].add_image(img)
+workbook.save(outputExcelFile)
+
+os.remove('C:/Users/Georges/Downloads/myplot1.png')
+os.remove('C:/Users/Georges/Downloads/myplot2.png')
+
 # TERMINAL OUTPUTS
-print(tab(df_Country_count.head(10), headers='keys', tablefmt='psql', showindex=False))
-print(tab(df_Categories_count, headers='keys', tablefmt='psql', showindex=False))
-print(tab(df_Specialties_count.head(10), headers='keys', tablefmt='psql', showindex=False))
-print(tab(df_SpecialtiesPerCountry_count.head(10), headers='keys', tablefmt='psql', showindex=False))
-print(tab(df_Industries_count.head(10), headers='keys', tablefmt='psql', showindex=False))
-print(tab(df_Email_DNS_count.head(10), headers='keys', tablefmt='psql', showindex=False))
-print(tab(df_HowDidYouHearAboutUs_count, headers='keys', tablefmt='psql', showindex=False))
-print(tab(df_Membership_count, headers='keys', tablefmt='psql', showindex=False))
+# print(tab(df_Country_count.head(10), headers='keys', tablefmt='psql', showindex=False))
+# print(tab(df_Categories_count, headers='keys', tablefmt='psql', showindex=False))
+# print(tab(df_Specialties_count.head(10), headers='keys', tablefmt='psql', showindex=False))
+# print(tab(df_SpecialtiesPerCountry_count.head(10), headers='keys', tablefmt='psql', showindex=False))
+# print(tab(df_Industries_count.head(10), headers='keys', tablefmt='psql', showindex=False))
+# print(tab(df_Email_DNS_count.head(10), headers='keys', tablefmt='psql', showindex=False))
+# print(tab(df_HowDidYouHearAboutUs_count, headers='keys', tablefmt='psql', showindex=False))
+# print(tab(df_Membership_count, headers='keys', tablefmt='psql', showindex=False))
 print(tab(df_ActivationCount, headers='keys', tablefmt='psql', showindex=False))
 print(today)
 print("OK, export done!")
