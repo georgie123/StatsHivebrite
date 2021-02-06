@@ -19,7 +19,7 @@ outputExcelFile = workDirectory+str(today)+' Stats AMS.xlsx'
 # For now from an Excel import, later we will use the API
 inputExcelFile = workDirectory+'User_export_'+str(today)+'.xlsx'
 df = pd.read_excel(inputExcelFile, sheet_name='Export', engine='openpyxl',
-                   usecols=['ID', 'Email', 'Account activation date', 'Live Location:Country', 'Industries:Industries',
+                   usecols=['ID', 'Email', 'Created at', 'Account activation date', 'Live Location:Country', 'Industries:Industries',
                             '_8f70fe1e_Occupation', '_ed5be3a0_How_did_you_hear_about_us_', 'Last Membership:Type name'
                             ])
 
@@ -39,6 +39,20 @@ df_ActivationCount = pd.DataFrame(ActivationDict, columns =['Users', 'Total'])
 
 df_ActivationCount['%'] = (df_ActivationCount['Total'] / allUsers) * 100
 df_ActivationCount['%'] = df_ActivationCount['%'].round(decimals=1)
+
+
+# COUNT REGISTRATIONS BY DATE (FIELD Created at)
+df['Created'] = pd.to_datetime(df['Created at'])
+df['Created'] = df['Created'].dt.to_period("M")
+df_TempCreated = pd.DataFrame(df['Created'])
+
+df_Created_count = pd.DataFrame(df_TempCreated.groupby(['Created'], dropna=False).size(), columns=['Total'])\
+    .sort_values(['Created'], ascending=True).reset_index()
+
+df_Created_count['Created'] = df_Created_count['Created'].dt.strftime('%b %Y')
+
+ind_drop = df_Created_count[df_Created_count['Created'].apply(lambda x: x.startswith('Feb 2020'))].index
+df_Created_count = df_Created_count.drop(ind_drop)
 
 
 # COUNT COUNTRY
@@ -132,7 +146,7 @@ df_Membership_count['Percent'] = df_Membership_count['Percent'].round(decimals=1
 # EXCEL FILE
 writer = pd.ExcelWriter(outputExcelFile, engine='xlsxwriter')
 
-df_ActivationCount.to_excel(writer, index=False, sheet_name='Status', header=True)
+df_ActivationCount.to_excel(writer, index=False, sheet_name='Registrations', header=True)
 df_Country_count.to_excel(writer, index=False, sheet_name='Countries', header=['Country', 'Total', '%'])
 df_Categories_count.to_excel(writer, index=False, sheet_name='Categories', header=['Category', 'Total', '%'])
 df_Specialties_count.to_excel(writer, index=False, sheet_name='Specialties', header=['Specialty', 'Total', '%'])
@@ -149,7 +163,7 @@ workbook = openpyxl.load_workbook(outputExcelFile)
 sheetsLits = workbook.sheetnames
 
 for sheet in sheetsLits:
-    if sheet == 'Status':
+    if sheet == 'Registrations':
         continue
     worksheet = workbook[sheet]
     FullRange = 'A1:' + get_column_letter(worksheet.max_column) + str(worksheet.max_row)
@@ -186,7 +200,7 @@ plt.pie(activationValue, labels=activationLabel, colors=colors, autopct='%1.1f%%
 plt.axis('equal')
 plt.title('User status', pad=20, fontsize=15)
 
-fig1.savefig(workDirectory+'myplot1.png', dpi=75)
+fig1.savefig(workDirectory+'myplot1.png', dpi=60)
 plt.clf()
 
 im = Image.open(workDirectory+'myplot1.png')
@@ -195,9 +209,9 @@ bordered.save(workDirectory+'myplot1.png')
 
 # INSERT CHART IN EXCEL
 img = openpyxl.drawing.image.Image(workDirectory+'myplot1.png')
-img.anchor = 'E4'
+img.anchor = 'A6'
 
-workbook['Status'].add_image(img)
+workbook['Registrations'].add_image(img)
 workbook.save(outputExcelFile)
 
 
@@ -303,11 +317,63 @@ workbook['Memberships'].add_image(img)
 workbook.save(outputExcelFile)
 
 
+# CHART COUNT REGISTRATIONS BY DATE (FIELD Created at)
+chartLabel = df_Created_count['Created'].tolist()
+chartValue = df_Created_count['Total'].tolist()
+
+fig5 = plt.figure(figsize=(13,6))
+bar_plot = plt.bar(chartLabel, chartValue)
+
+# plt.ylabel('yyy')
+# plt.xlabel('xxx')
+plt.xticks(rotation=30, ha='right')
+
+# HIDE BORDERS
+plt.gca().spines['left'].set_color('none')
+plt.gca().spines['right'].set_color('none')
+plt.gca().spines['top'].set_color('none')
+
+# HIDE TICKS
+plt.tick_params(axis='y', labelsize=0, length=0)
+plt.yticks([])
+
+# ADD VALUE ON THE END OF HORIZONTAL BARS
+# for index, value in enumerate(chartValue):
+#     plt.text(value, index, str(value))
+
+# ADD VALUE ON THE TOP OF VERTICAL BARS
+def autolabel(rects):
+    for idx, rect in enumerate(bar_plot):
+        height = rect.get_height()
+        plt.text(rect.get_x() + rect.get_width()/2, height,
+                chartValue[idx],
+                ha='center', va='bottom', rotation=0)
+
+autolabel(bar_plot)
+
+plt.title('Registrations by month', pad=20, fontsize=15)
+
+fig5.savefig(workDirectory+'myplot5.png', dpi=100)
+plt.clf()
+
+im = Image.open(workDirectory+'myplot5.png')
+bordered = ImageOps.expand(im, border=1, fill=(0, 0, 0))
+bordered.save(workDirectory+'myplot5.png')
+
+# INSERT IN EXCEL
+img = openpyxl.drawing.image.Image(workDirectory+'myplot5.png')
+img.anchor = 'E2'
+
+workbook['Registrations'].add_image(img)
+workbook.save(outputExcelFile)
+
+
 # REMOVE PICTURES
 os.remove(workDirectory+'myplot1.png')
 os.remove(workDirectory+'myplot2.png')
 os.remove(workDirectory+'myplot3.png')
 os.remove(workDirectory+'myplot4.png')
+os.remove(workDirectory+'myplot5.png')
 
 
 # TERMINAL OUTPUTS
