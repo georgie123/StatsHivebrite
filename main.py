@@ -19,26 +19,28 @@ outputExcelFile = workDirectory+str(today)+' Stats AMS.xlsx'
 # For now from an Excel import, later we will use the API
 inputExcelFile = workDirectory+'User_export_'+str(today)+'.xlsx'
 df = pd.read_excel(inputExcelFile, sheet_name='Export', engine='openpyxl',
-                   usecols=['ID', 'Email', 'Created at', 'Account activation date', 'Live Location:Country', 'Industries:Industries',
+                   usecols=['ID', 'Email', 'Not blocked', 'Created at', 'Account activation date', 'Live Location:Country',
+                            'Industries:Industries',
                             '_8f70fe1e_Occupation', '_ed5be3a0_How_did_you_hear_about_us_', 'Last Membership:Type name'
                             ])
 
 
 # COUNT ACTIVATION
-activeUsers = df['Account activation date'].count()
+activeUsers = df[df['Not blocked'] == True].count()['Account activation date']
 nonActiveUsers = df['Account activation date'].isna().sum()
+blockedUsers = df[df['Not blocked'] == False].count()['Account activation date']
 allUsers = df['ID'].count()
 
 activationLabel = []
 myCounts = []
-activationLabel.extend(('Confirmed', 'Unconfirmed', 'Total'))
-myCounts.extend((activeUsers, nonActiveUsers, allUsers))
+activationLabel.extend(('Confirmed', 'Unconfirmed', 'Blocked', 'Total'))
+myCounts.extend((activeUsers, nonActiveUsers, blockedUsers, allUsers))
 
 ActivationDict = list(zip(activationLabel, myCounts))
 df_ActivationCount = pd.DataFrame(ActivationDict, columns =['Users', 'Total'])
 
 df_ActivationCount['%'] = (df_ActivationCount['Total'] / allUsers) * 100
-df_ActivationCount['%'] = df_ActivationCount['%'].round(decimals=1)
+df_ActivationCount['%'] = df_ActivationCount['%'].round(decimals=2)
 
 
 # COUNT REGISTRATIONS BY DATE (FIELD Created at)
@@ -191,16 +193,16 @@ for sheet in sheetsLits:
 activationLabel.pop()
 
 activationValue = []
-activationValue.extend([activeUsers, nonActiveUsers])
+activationValue.extend([activeUsers, nonActiveUsers, blockedUsers])
 
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 fig1 = plt.figure()
-plt.pie(activationValue, labels=activationLabel, colors=colors, autopct='%1.1f%%', shadow=False, startangle=90)
+plt.pie(activationValue, labels=activationLabel, colors=colors, autopct='%1.2f%%', shadow=False, startangle=90)
 plt.axis('equal')
 plt.title('User status', pad=20, fontsize=15)
 
-fig1.savefig(workDirectory+'myplot1.png', dpi=60)
+fig1.savefig(workDirectory+'myplot1.png', dpi=70)
 plt.clf()
 
 im = Image.open(workDirectory+'myplot1.png')
@@ -209,7 +211,7 @@ bordered.save(workDirectory+'myplot1.png')
 
 # INSERT CHART IN EXCEL
 img = openpyxl.drawing.image.Image(workDirectory+'myplot1.png')
-img.anchor = 'A6'
+img.anchor = 'A8'
 
 workbook['Registrations'].add_image(img)
 workbook.save(outputExcelFile)
@@ -362,7 +364,7 @@ bordered.save(workDirectory+'myplot5.png')
 
 # INSERT IN EXCEL
 img = openpyxl.drawing.image.Image(workDirectory+'myplot5.png')
-img.anchor = 'E2'
+img.anchor = 'F2'
 
 workbook['Registrations'].add_image(img)
 workbook.save(outputExcelFile)
