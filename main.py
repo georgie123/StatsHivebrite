@@ -274,7 +274,7 @@ fig3 = plt.figure()
 plt.pie(chartValue, labels=None, colors=colors, autopct='%1.1f%%', shadow=False, startangle=90)
 
 plt.axis('equal')
-plt.title('How did you hear about us (know)', pad=20, fontsize=15)
+plt.title('How did you hear about us (known)', pad=20, fontsize=15)
 
 plt.legend(chartLabel, loc='best', fontsize=8)
 
@@ -381,7 +381,7 @@ scheme = [cm(i / num_colors) for i in range(num_colors)]
 
 my_range = np.linspace(my_values.min(), my_values.max(), num_colors)
 
-df_Country_count['Percent'] = np.digitize(my_values, my_range)
+df_Country_count['Percent'] = np.digitize(my_values, my_range) - 1
 
 map1 = plt.figure(figsize=(14, 8))
 
@@ -417,7 +417,7 @@ cb = mpl.colorbar.ColorbarBase(ax_legend, cmap=cmap, ticks=my_range, boundaries=
 # cb.set_label('Percentage', rotation=0)
 cb.remove()
 
-map1.savefig(workDirectory+'mymap1.png', dpi=100, bbox_inches='tight')
+map1.savefig(workDirectory+'mymap1.png', dpi=110, bbox_inches='tight')
 plt.clf()
 
 im = Image.open(workDirectory+'mymap1.png')
@@ -426,7 +426,7 @@ bordered.save(workDirectory+'mymap1.png')
 
 # INSERT IN EXCEL
 img = openpyxl.drawing.image.Image(workDirectory+'mymap1.png')
-img.anchor = 'E4'
+img.anchor = 'E2'
 
 workbook['Countries'].add_image(img)
 workbook.save(outputExcelFile)
@@ -438,18 +438,10 @@ os.remove(workDirectory+'myplot2.png')
 os.remove(workDirectory+'myplot3.png')
 os.remove(workDirectory+'myplot4.png')
 os.remove(workDirectory+'myplot5.png')
-os.remove(workDirectory+'mymap1.png')
+# os.remove(workDirectory+'mymap1.png')
 
 
-# TERMINAL OUTPUTS
-# print(tab(df_Country_count.head(10), headers='keys', tablefmt='psql', showindex=False))
-# print(tab(df_Categories_count, headers='keys', tablefmt='psql', showindex=False))
-# print(tab(df_Specialties_count.head(10), headers='keys', tablefmt='psql', showindex=False))
-# print(tab(df_SpecialtiesPerCountry_count.head(10), headers='keys', tablefmt='psql', showindex=False))
-# print(tab(df_Industries_count.head(10), headers='keys', tablefmt='psql', showindex=False))
-# print(tab(df_Email_DNS_count.head(10), headers='keys', tablefmt='psql', showindex=False))
-# print(tab(df_HowDidYouHearAboutUs_count, headers='keys', tablefmt='psql', showindex=False))
-# print(tab(df_Membership_count, headers='keys', tablefmt='psql', showindex=False))
+# TERMINAL OUTPUTS AND TESTS
 print(tab(df_ActivationCount, headers='keys', tablefmt='psql', showindex=False))
 print(today)
 print("OK, export done!")
