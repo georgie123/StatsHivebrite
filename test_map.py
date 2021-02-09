@@ -22,17 +22,24 @@ df = pd.read_excel(inputExcelFile, sheet_name='Export', engine='openpyxl',
 
 
 # COUNT COUNTRY
-df_Country_count = pd.DataFrame(df.groupby(['Live Location:Country'], dropna=False).size(), columns=['Total'])\
+df_Country_count = pd.DataFrame(df.groupby(['Live Location:Country'], dropna=True).size(), columns=['Total'])\
     .sort_values(['Total'], ascending=False).reset_index()
 df_Country_count = df_Country_count.fillna('Unknow')
 
 df_Country_count['Percent'] = (df_Country_count['Total'] / df_Country_count['Total'].sum()) * 100
 df_Country_count['Percent'] = df_Country_count['Percent'].round(decimals=2)
 
+print('origine', df_Country_count)
+print('\n')
+
 # MAP COUNTRIES
 df_Country_count.set_index('Live Location:Country', inplace=True)
+print('apres index', df_Country_count)
+print('\n')
 
 my_values = df_Country_count['Percent']
+print('les values', my_values)
+print('\n')
 
 num_colors = 30
 cm = plt.get_cmap('Blues')
@@ -40,7 +47,9 @@ scheme = [cm(i / num_colors) for i in range(num_colors)]
 
 my_range = np.linspace(my_values.min(), my_values.max(), num_colors)
 
-df_Country_count['Percent'] = np.digitize(my_values, my_range)
+# -1 TO AVOID SEARCH IN A PANDAS DATA-FRAME INCLUDING START AND STOP VALUE (I think ...)
+df_Country_count['Percent'] = np.digitize(my_values, my_range) - 1
+print('digitize', df_Country_count['Percent'])
 
 map1 = plt.figure(figsize=(12, 7))
 
@@ -75,15 +84,18 @@ cb = mpl.colorbar.ColorbarBase(ax_legend, cmap=cmap, ticks=my_range, boundaries=
 cb.ax.set_xticklabels([str(round(i, 1)) for i in my_range])
 cb.ax.tick_params(labelsize=7)
 cb.set_label('Percentage', rotation=0)
+#cb.remove()
 
 # Set the map footer
-# description = 'Display by percentage'
+# description = 'Bla bla bla'
 # plt.annotate(description, xy=(-.8, -3.2), size=14, xycoords='axes fraction')
 
-map1.savefig('C:/Users/Georges/Downloads/mymap1.png', dpi=100)
+map1.savefig('C:/Users/Georges/Downloads/mymap1.png', dpi=100, bbox_inches='tight')
+
 plt.show()
 plt.clf()
 
 im = Image.open('C:/Users/Georges/Downloads/mymap1.png')
+
 bordered = ImageOps.expand(im, border=1, fill=(0, 0, 0))
 bordered.save('C:/Users/Georges/Downloads/mymap1.png')
