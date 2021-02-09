@@ -3,7 +3,15 @@ from datetime import date
 from tabulate import tabulate as tab
 
 import pandas as pd
+
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
+from matplotlib.collections import PatchCollection
+from mpl_toolkits.basemap import Basemap
+
+import numpy as np
+
 from PIL import Image, ImageOps
 
 import openpyxl
@@ -12,9 +20,9 @@ from openpyxl.utils import get_column_letter
 
 today = date.today()
 
+shp_simple_countries = r'C:/Users/Georges/PycharmProjects/data/simple_countries/simple_countries'
 workDirectory = r'C:/Users/Georges/Downloads/'
-
-outputExcelFile = workDirectory+str(today)+' Stats AMS.xlsx'
+outputExcelFile = workDirectory+str(today)+' Stats AMS Users.xlsx'
 
 # For now from an Excel import, later we will use the API
 inputExcelFile = workDirectory+'User_export_'+str(today)+'.xlsx'
@@ -326,8 +334,6 @@ chartValue = df_Created_count['Total'].tolist()
 fig5 = plt.figure(figsize=(13,6))
 bar_plot = plt.bar(chartLabel, chartValue)
 
-# plt.ylabel('yyy')
-# plt.xlabel('xxx')
 plt.xticks(rotation=30, ha='right')
 
 # HIDE BORDERS
@@ -339,10 +345,6 @@ plt.gca().spines['top'].set_color('none')
 plt.tick_params(axis='y', labelsize=0, length=0)
 plt.yticks([])
 
-# ADD VALUE ON THE END OF HORIZONTAL BARS
-# for index, value in enumerate(chartValue):
-#     plt.text(value, index, str(value))
-
 # ADD VALUE ON THE TOP OF VERTICAL BARS
 def autolabel(rects):
     for idx, rect in enumerate(bar_plot):
@@ -352,8 +354,6 @@ def autolabel(rects):
                 ha='center', va='bottom', rotation=0)
 
 autolabel(bar_plot)
-
-plt.title('Registrations by month', pad=20, fontsize=15)
 
 fig5.savefig(workDirectory+'myplot5.png', dpi=100)
 plt.clf()
@@ -370,12 +370,75 @@ workbook['Registrations'].add_image(img)
 workbook.save(outputExcelFile)
 
 
+# MAP COUNTRIES
+df_Country_count.set_index('Live Location:Country', inplace=True)
+
+my_values = df_Country_count['Percent']
+
+num_colors = 30
+cm = plt.get_cmap('Blues')
+scheme = [cm(i / num_colors) for i in range(num_colors)]
+
+my_range = np.linspace(my_values.min(), my_values.max(), num_colors)
+
+df_Country_count['Percent'] = np.digitize(my_values, my_range)
+
+map1 = plt.figure(figsize=(14, 8))
+
+ax = map1.add_subplot(111, frame_on=False)
+
+m = Basemap(lon_0=0, projection='robin')
+m.drawmapboundary(color='w')
+
+m.readshapefile(shp_simple_countries, 'units', color='#444444', linewidth=.2, default_encoding='iso-8859-15')
+
+for info, shape in zip(m.units_info, m.units):
+    shp_ctry = info['COUNTRY_HB']
+    if shp_ctry not in df_Country_count.index:
+        color = '#dddddd'
+    else:
+        color = scheme[df_Country_count.loc[shp_ctry]['Percent']]
+
+    patches = [Polygon(np.array(shape), True)]
+    pc = PatchCollection(patches)
+    pc.set_facecolor(color)
+    ax.add_collection(pc)
+
+# Cover up Antarctica
+ax.axhspan(0, 1000 * 1800, facecolor='w', edgecolor='w', zorder=2)
+
+# Draw color legend
+ax_legend = map1.add_axes([0.2, 0.14, 0.6, 0.03], zorder=3)
+cmap = mpl.colors.ListedColormap(scheme)
+cb = mpl.colorbar.ColorbarBase(ax_legend, cmap=cmap, ticks=my_range, boundaries=my_range, orientation='horizontal')
+
+# cb.ax.set_xticklabels([str(round(i, 1)) for i in my_range])
+# cb.ax.tick_params(labelsize=7)
+# cb.set_label('Percentage', rotation=0)
+cb.remove()
+
+map1.savefig(workDirectory+'mymap1.png', dpi=100, bbox_inches='tight')
+plt.clf()
+
+im = Image.open(workDirectory+'mymap1.png')
+bordered = ImageOps.expand(im, border=1, fill=(0, 0, 0))
+bordered.save(workDirectory+'mymap1.png')
+
+# INSERT IN EXCEL
+img = openpyxl.drawing.image.Image(workDirectory+'mymap1.png')
+img.anchor = 'E4'
+
+workbook['Countries'].add_image(img)
+workbook.save(outputExcelFile)
+
+
 # REMOVE PICTURES
 os.remove(workDirectory+'myplot1.png')
 os.remove(workDirectory+'myplot2.png')
 os.remove(workDirectory+'myplot3.png')
 os.remove(workDirectory+'myplot4.png')
 os.remove(workDirectory+'myplot5.png')
+os.remove(workDirectory+'mymap1.png')
 
 
 # TERMINAL OUTPUTS
