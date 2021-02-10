@@ -11,6 +11,7 @@ Registrations, countries, interests, specialties, email domains, charts, map...
     - Account activation date
     - Live location fields
     - Industries field (a custom field in my case)
+    - Last membership taken fields 
     - Business/Professional sector field (a custom field)
     - "How did you hear about us?" field (a custom field)
       
