@@ -438,7 +438,7 @@ os.remove(workDirectory+'myplot2.png')
 os.remove(workDirectory+'myplot3.png')
 os.remove(workDirectory+'myplot4.png')
 os.remove(workDirectory+'myplot5.png')
-# os.remove(workDirectory+'mymap1.png')
+os.remove(workDirectory+'mymap1.png')
 
 
 # TERMINAL OUTPUTS AND TESTS

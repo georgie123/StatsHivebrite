@@ -29,17 +29,11 @@ df_Country_count = df_Country_count.fillna('Unknow')
 df_Country_count['Percent'] = (df_Country_count['Total'] / df_Country_count['Total'].sum()) * 100
 df_Country_count['Percent'] = df_Country_count['Percent'].round(decimals=2)
 
-print('origine', df_Country_count)
-print('\n')
 
 # MAP COUNTRIES
 df_Country_count.set_index('Live Location:Country', inplace=True)
-print('apres index', df_Country_count)
-print('\n')
 
 my_values = df_Country_count['Percent']
-print('les values', my_values)
-print('\n')
 
 num_colors = 30
 cm = plt.get_cmap('Blues')
@@ -49,9 +43,8 @@ my_range = np.linspace(my_values.min(), my_values.max(), num_colors)
 
 # -1 TO AVOID SEARCH IN A PANDAS DATA-FRAME INCLUDING START AND STOP VALUE (I think ...)
 df_Country_count['Percent'] = np.digitize(my_values, my_range) - 1
-print('digitize', df_Country_count['Percent'])
 
-map1 = plt.figure(figsize=(12, 7))
+map1 = plt.figure(figsize=(14, 8))
 
 ax = map1.add_subplot(111, frame_on=False)
 map1.suptitle('Countries', fontsize=30, y=.95)
