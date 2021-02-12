@@ -10,6 +10,7 @@ Registrations, countries, interests, specialties, email domains, charts, map...
     - Creation date field
     - Account activation date
     - Live location fields
+    - Groups Member:Group Member
     - Industries field (a custom field in my case)
     - Last membership taken fields 
     - Business/Professional sector field (a custom field)

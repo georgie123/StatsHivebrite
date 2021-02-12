@@ -29,7 +29,7 @@ outputExcelFile = workDirectory+str(today)+' Stats AMS Users.xlsx'
 inputExcelFile = workDirectory+'User_export_'+str(today)+'.xlsx'
 df = pd.read_excel(inputExcelFile, sheet_name='Export', engine='openpyxl',
                    usecols=['ID', 'Email', 'Not blocked', 'Created at', 'Account activation date', 'Live Location:Country',
-                            'Industries:Industries',
+                            'Industries:Industries', 'Groups Member:Group Member',
                             '_8f70fe1e_Occupation', '_ed5be3a0_How_did_you_hear_about_us_', 'Last Membership:Type name'
                             ])
 
@@ -122,6 +122,31 @@ df_Industries_count.loc[(df_Industries_count['value'] == 'AZERTY')] = [['Unknow'
 df_Industries_count = df_Industries_count.sort_values(['Total'], ascending=False)
 
 
+# COUNT GROUPS (FIELD Groups Member:Group Member)
+df_tempGroups = pd.DataFrame(pd.melt(df['Groups Member:Group Member'].str.split(',', expand=True))['value'])
+df_Groups_count = pd.DataFrame(df_tempGroups.groupby(['value'], dropna=False).size(), columns=['Total'])\
+    .reset_index()
+df_Groups_count = df_Groups_count.fillna('AZERTY')
+
+df_Groups_count['Percent'] = (df_Groups_count['Total'] / df.shape[0]) * 100
+df_Groups_count['Percent'] = df_Groups_count['Percent'].round(decimals=2)
+
+# EMPTY VALUES
+groupsEmpty = df['Groups Member:Group Member'].isna().sum()
+groupsEmptyPercent = round((groupsEmpty / df.shape[0]) * 100, 2)
+
+# REPLACE EMPTY VALUES AND SORT
+df_Groups_count.loc[(df_Groups_count['value'] == 'AZERTY')] = [['None', groupsEmpty, groupsEmptyPercent]]
+df_Groups_count = df_Groups_count.sort_values(['Total'], ascending=False)
+
+df_Groups_count['value'] = df_Groups_count['value'].replace(['17794'], 'AMS North American Chapter')
+df_Groups_count['value'] = df_Groups_count['value'].replace(['19659'], 'No name')
+df_Groups_count['value'] = df_Groups_count['value'].replace(['19858'], 'Industries')
+df_Groups_count['value'] = df_Groups_count['value'].replace(['19859'], 'Medicinae Doctor')
+df_Groups_count['value'] = df_Groups_count['value'].replace(['22580'], 'Euro Aesthetics')
+df_Groups_count['value'] = df_Groups_count['value'].replace(['23831'], 'AMS Eastern Europe')
+
+
 # COUNT EMAIL DOMAINS
 df['Domain'] = df['Email'].str.split('@').str[1]
 df_Email_DNS_count = pd.DataFrame(df.groupby(['Domain'], dropna=False).size(), columns=['Total'])\
@@ -163,6 +188,7 @@ df_Categories_count.to_excel(writer, index=False, sheet_name='Categories', heade
 df_Specialties_count.to_excel(writer, index=False, sheet_name='Specialties', header=['Specialty', 'Total', '%'])
 df_SpecialtiesPerCountry_count.to_excel(writer, index=False, sheet_name='Specialties per country', header=['Country', 'Specialty', 'Total', '%'])
 df_Industries_count.to_excel(writer, index=False, sheet_name='Expertise & Interests', header=['Expertise or Interest', 'Total', '%'])
+df_Groups_count.to_excel(writer, index=False, sheet_name='Groups', header=['Group', 'Total', '%'])
 df_Email_DNS_count.to_excel(writer, index=False, sheet_name='Email domains', header=['Email domain', 'Total', '%'])
 df_HowDidYouHearAboutUs_count.to_excel(writer, index=False, sheet_name='How Did You Hear', header=['How did you hear about us', 'Total', '%'])
 df_Membership_count.to_excel(writer, index=False, sheet_name='Memberships', header=['Membership', 'Total', '%'])
@@ -371,6 +397,40 @@ workbook['Registrations'].add_image(img)
 workbook.save(outputExcelFile)
 
 
+# CHART GROUPS (FIELD Groups Member:Group Member)
+chartLabel = df_Groups_count['value'].tolist()
+chartValue = df_Groups_count['Total'].tolist()
+chartLegendPercent = df_Groups_count['Percent'].tolist()
+
+legendLabels = []
+for i, j in zip(chartLabel, map(str, chartLegendPercent)):
+    legendLabels.append(i + ' (' + j + ' %)')
+
+colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+fig6 = plt.figure()
+plt.pie(chartValue, labels=None, colors=colors, autopct=None, shadow=False, startangle=90)
+
+plt.axis('equal')
+plt.title('Groups', pad=20, fontsize=15)
+
+plt.legend(legendLabels, loc='best', fontsize=8)
+
+fig6.savefig(workDirectory+'myplot6.png', dpi=100)
+plt.clf()
+
+im = Image.open(workDirectory+'myplot6.png')
+bordered = ImageOps.expand(im, border=1, fill=(0, 0, 0))
+bordered.save(workDirectory+'myplot6.png')
+
+# INSERT IN EXCEL
+img = openpyxl.drawing.image.Image(workDirectory+'myplot6.png')
+img.anchor = 'F2'
+
+workbook['Groups'].add_image(img)
+workbook.save(outputExcelFile)
+
+
 # MAP COUNTRIES
 df_Country_count.set_index('Live Location:Country', inplace=True)
 
@@ -439,6 +499,7 @@ os.remove(workDirectory+'myplot2.png')
 os.remove(workDirectory+'myplot3.png')
 os.remove(workDirectory+'myplot4.png')
 os.remove(workDirectory+'myplot5.png')
+os.remove(workDirectory+'myplot6.png')
 os.remove(workDirectory+'mymap1.png')
 
 
