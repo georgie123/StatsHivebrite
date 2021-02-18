@@ -166,7 +166,7 @@ df_HowDidYouHearAboutUs_count['Percent'] = (df_HowDidYouHearAboutUs_count['Total
 df_HowDidYouHearAboutUs_count['Percent'] = df_HowDidYouHearAboutUs_count['Percent'].round(decimals=1)
 
 # REPLACE SOME VALUES
-df_HowDidYouHearAboutUs_count['_ed5be3a0_How_did_you_hear_about_us_'] = df_HowDidYouHearAboutUs_count['_ed5be3a0_How_did_you_hear_about_us_'].replace(['Email from partners (AMWC, VCS, FACE etc)'],'Email from partners')
+# df_HowDidYouHearAboutUs_count['_ed5be3a0_How_did_you_hear_about_us_'] = df_HowDidYouHearAboutUs_count['_ed5be3a0_How_did_you_hear_about_us_'].replace(['Email from partners (AMWC, VCS, FACE etc)'],'Email from partners')
 df_HowDidYouHearAboutUs_count['_ed5be3a0_How_did_you_hear_about_us_'] = df_HowDidYouHearAboutUs_count['_ed5be3a0_How_did_you_hear_about_us_'].replace(['Other: please specify'],'Other')
 
 
