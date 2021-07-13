@@ -212,20 +212,20 @@ df_HowDidYouHearAboutUs_count['_ed5be3a0_How_did_you_hear_about_us_'] = df_HowDi
 # COUNT MEMBERSHIP (FIELD Most Recent Membership Subscription:Type name)
 
 # CLEAN EXPIRED MEMBERSHIP
-selected_columns = df[['ID', 'Most Recent Membership Subscription:Expires at', 'Most Recent Membership Subscription:Type name']]
-df_MembershipCleaned = selected_columns.copy()
-df_MembershipCleaned['Most Recent Membership Subscription:Expires at'] = df_MembershipCleaned['Most Recent Membership Subscription:Expires at'].astype(str)
-
-df_MembershipCleaned['Most Recent Membership Subscription:Expires at'] = df_MembershipCleaned['Most Recent Membership Subscription:Expires at'].str[:-13]
-
-df_MembershipCleaned.loc[df_MembershipCleaned['Most Recent Membership Subscription:Expires at'] < str(today), 'Most Recent Membership Subscription:Type name'] = np.NaN
-
-df_Membership_count = pd.DataFrame(df_MembershipCleaned.groupby(['Most Recent Membership Subscription:Type name'], dropna=False).size(), columns=['Total'])\
-    .sort_values(['Total'], ascending=False).reset_index()
-df_Membership_count = df_Membership_count.fillna('Basic Membership')
-
-df_Membership_count['Percent'] = (df_Membership_count['Total'] / df_Membership_count['Total'].sum()) * 100
-df_Membership_count['Percent'] = df_Membership_count['Percent'].round(decimals=1)
+# selected_columns = df[['ID', 'Most Recent Membership Subscription:Expires at', 'Most Recent Membership Subscription:Type name']]
+# df_MembershipCleaned = selected_columns.copy()
+# df_MembershipCleaned['Most Recent Membership Subscription:Expires at'] = df_MembershipCleaned['Most Recent Membership Subscription:Expires at'].astype(str)
+#
+# df_MembershipCleaned['Most Recent Membership Subscription:Expires at'] = df_MembershipCleaned['Most Recent Membership Subscription:Expires at'].str[:-13]
+#
+# df_MembershipCleaned.loc[df_MembershipCleaned['Most Recent Membership Subscription:Expires at'] < str(today), 'Most Recent Membership Subscription:Type name'] = np.NaN
+#
+# df_Membership_count = pd.DataFrame(df_MembershipCleaned.groupby(['Most Recent Membership Subscription:Type name'], dropna=False).size(), columns=['Total'])\
+#     .sort_values(['Total'], ascending=False).reset_index()
+# df_Membership_count = df_Membership_count.fillna('Basic Membership')
+#
+# df_Membership_count['Percent'] = (df_Membership_count['Total'] / df_Membership_count['Total'].sum()) * 100
+# df_Membership_count['Percent'] = df_Membership_count['Percent'].round(decimals=1)
 
 
 # COUNT EXPERIENCE (How many years have you been in practice)
@@ -269,7 +269,7 @@ df_Industries_count.to_excel(writer, index=False, sheet_name='Expertise & Intere
 df_Groups_count.to_excel(writer, index=False, sheet_name='Groups', header=['Group', 'Total', '%'])
 df_Email_DNS_count.to_excel(writer, index=False, sheet_name='Email domains', header=['Email domain', 'Total', '%'])
 df_HowDidYouHearAboutUs_count.to_excel(writer, index=False, sheet_name='How Did You Hear', header=['How did you hear about us (known)', 'Total', '%'])
-df_Membership_count.to_excel(writer, index=False, sheet_name='Current memberships', header=['Current memberships', 'Total', '%'])
+# df_Membership_count.to_excel(writer, index=False, sheet_name='Current memberships', header=['Current memberships', 'Total', '%'])
 df_Experience_count.to_excel(writer, index=False, sheet_name='Experience', header=['Experience', 'Total', '%'])
 df_Degrees_count.to_excel(writer, index=False, sheet_name='Degrees', header=['Degree', 'Total', '%'])
 
@@ -304,7 +304,7 @@ for sheet in sheetsLits:
         workbook.save(outputExcelFile)
 
 workbook['How Did You Hear'].column_dimensions['A'].width = 40
-workbook['Current memberships'].column_dimensions['A'].width = 45
+# workbook['Current memberships'].column_dimensions['A'].width = 45
 workbook.save(outputExcelFile)
 
 # EXCEL FREEZE TOP ROW
@@ -319,8 +319,8 @@ for sheet in sheetsLits:
         continue
     if sheet == 'How Did You Hear':
         continue
-    if sheet == 'Current memberships':
-        continue
+    # if sheet == 'Current memberships':
+    #     continue
     if sheet == 'Experience':
         continue
     if sheet == 'Degrees':
@@ -445,41 +445,41 @@ workbook.save(outputExcelFile)
 
 
 # CHART MEMBERSHIP (FIELD Most Recent Membership Subscription:Type name)
-chartLabel = df_Membership_count['Most Recent Membership Subscription:Type name'].tolist()
-chartValue = df_Membership_count['Total'].tolist()
-chartLegendPercent = df_Membership_count['Percent'].tolist()
-
-explodeValues = []
-for i in chartValue:
-    explodeValues.append(0.05)
-
-legendLabels = []
-for i, j in zip(chartLabel, map(str, chartLegendPercent)):
-    legendLabels.append(i + ' (' + j + ' %)')
-
-colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-
-fig4 = plt.figure()
-plt.pie(chartValue, labels=None, colors=colors, explode=explodeValues, autopct=None, shadow=False, startangle=90)
-
-plt.axis('equal')
-plt.title('Memberships', pad=20, fontsize=15)
-
-plt.legend(legendLabels, loc='best', fontsize=8)
-
-fig4.savefig(workDirectory+'myplot4.png', dpi=100)
-plt.clf()
-
-im = Image.open(workDirectory+'myplot4.png')
-bordered = ImageOps.expand(im, border=1, fill=(0, 0, 0))
-bordered.save(workDirectory+'myplot4.png')
-
-# INSERT IN EXCEL
-img = openpyxl.drawing.image.Image(workDirectory+'myplot4.png')
-img.anchor = 'E4'
-
-workbook['Current memberships'].add_image(img)
-workbook.save(outputExcelFile)
+# chartLabel = df_Membership_count['Most Recent Membership Subscription:Type name'].tolist()
+# chartValue = df_Membership_count['Total'].tolist()
+# chartLegendPercent = df_Membership_count['Percent'].tolist()
+#
+# explodeValues = []
+# for i in chartValue:
+#     explodeValues.append(0.05)
+#
+# legendLabels = []
+# for i, j in zip(chartLabel, map(str, chartLegendPercent)):
+#     legendLabels.append(i + ' (' + j + ' %)')
+#
+# colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+#
+# fig4 = plt.figure()
+# plt.pie(chartValue, labels=None, colors=colors, explode=explodeValues, autopct=None, shadow=False, startangle=90)
+#
+# plt.axis('equal')
+# plt.title('Memberships', pad=20, fontsize=15)
+#
+# plt.legend(legendLabels, loc='best', fontsize=8)
+#
+# fig4.savefig(workDirectory+'myplot4.png', dpi=100)
+# plt.clf()
+#
+# im = Image.open(workDirectory+'myplot4.png')
+# bordered = ImageOps.expand(im, border=1, fill=(0, 0, 0))
+# bordered.save(workDirectory+'myplot4.png')
+#
+# # INSERT IN EXCEL
+# img = openpyxl.drawing.image.Image(workDirectory+'myplot4.png')
+# img.anchor = 'E4'
+#
+# workbook['Current memberships'].add_image(img)
+# workbook.save(outputExcelFile)
 
 
 # CHART COUNT REGISTRATIONS BY DATE (FIELD Created at)
@@ -806,7 +806,7 @@ workbook.save(outputExcelFile)
 os.remove(workDirectory+'myplot1.png')
 os.remove(workDirectory+'myplot2.png')
 os.remove(workDirectory+'myplot3.png')
-os.remove(workDirectory+'myplot4.png')
+# os.remove(workDirectory+'myplot4.png')
 os.remove(workDirectory+'myplot5.png')
 os.remove(workDirectory+'myplot6.png')
 os.remove(workDirectory+'myplot7.png')
