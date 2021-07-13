@@ -33,7 +33,7 @@ inputExcelFile = workDirectory+'User_export_'+str(today)+'.xlsx'
 df = pd.read_excel(inputExcelFile, sheet_name='Export', engine='openpyxl',
                    usecols=['ID', 'Email', 'Not blocked', 'Created at', 'Account activation date', 'Live Location:Country',
                             'Industries:Industries', 'Groups Member:Group Member',
-                            '_8f70fe1e_Occupation', '_ed5be3a0_How_did_you_hear_about_us_', 'Last Membership:Type name', 'Last Membership:Expires at',
+                            '_8f70fe1e_Occupation', '_ed5be3a0_How_did_you_hear_about_us_', 'Most Recent Membership Subscription:Type name', 'Most Recent Membership Subscription:Expires at',
                             '_a7634d0d_Professional_Designation__Degree__', '_83fb023d_How_many_years_have_you_been_in_practice_'
                             ])
 
@@ -177,11 +177,12 @@ df_Groups_count = df_Groups_count.sort_values(['Total'], ascending=False)
 df_Groups_count['value'] = df_Groups_count['value'].replace(['17794'], 'AMS North America')
 df_Groups_count['value'] = df_Groups_count['value'].replace(['19659'], 'AMS Asia')
 df_Groups_count['value'] = df_Groups_count['value'].replace(['25496'], 'AMS Latin America Chapter')
-df_Groups_count['value'] = df_Groups_count['value'].replace(['27725'], 'AMS Eastern Europe')
+df_Groups_count['value'] = df_Groups_count['value'].replace(['27725'], 'AMS Eastern Europe (CIS)')
 df_Groups_count['value'] = df_Groups_count['value'].replace(['22580'], 'Euro Aesthetics')
 df_Groups_count['value'] = df_Groups_count['value'].replace(['24594'], 'Aptos')
 df_Groups_count['value'] = df_Groups_count['value'].replace(['25340'], 'Lutronic')
 df_Groups_count['value'] = df_Groups_count['value'].replace(['27724'], 'FillMed Laboratoires')
+df_Groups_count['value'] = df_Groups_count['value'].replace(['28210'], 'QuantifiCare')
 df_Groups_count['value'] = df_Groups_count['value'].replace(['19859'], 'Medicinae Doctor')
 df_Groups_count['value'] = df_Groups_count['value'].replace(['24262'], 'Other')
 df_Groups_count['value'] = df_Groups_count['value'].replace(['19858'], 'Industries')
@@ -208,18 +209,18 @@ df_HowDidYouHearAboutUs_count['Percent'] = df_HowDidYouHearAboutUs_count['Percen
 df_HowDidYouHearAboutUs_count['_ed5be3a0_How_did_you_hear_about_us_'] = df_HowDidYouHearAboutUs_count['_ed5be3a0_How_did_you_hear_about_us_'].replace(['Other: please specify'],'Other')
 
 
-# COUNT MEMBERSHIP (FIELD Last Membership:Type name)
+# COUNT MEMBERSHIP (FIELD Most Recent Membership Subscription:Type name)
 
 # CLEAN EXPIRED MEMBERSHIP
-selected_columns = df[['ID', 'Last Membership:Expires at', 'Last Membership:Type name']]
+selected_columns = df[['ID', 'Most Recent Membership Subscription:Expires at', 'Most Recent Membership Subscription:Type name']]
 df_MembershipCleaned = selected_columns.copy()
-df_MembershipCleaned['Last Membership:Expires at'] = df_MembershipCleaned['Last Membership:Expires at'].astype(str)
+df_MembershipCleaned['Most Recent Membership Subscription:Expires at'] = df_MembershipCleaned['Most Recent Membership Subscription:Expires at'].astype(str)
 
-df_MembershipCleaned['Last Membership:Expires at'] = df_MembershipCleaned['Last Membership:Expires at'].str[:-13]
+df_MembershipCleaned['Most Recent Membership Subscription:Expires at'] = df_MembershipCleaned['Most Recent Membership Subscription:Expires at'].str[:-13]
 
-df_MembershipCleaned.loc[df_MembershipCleaned['Last Membership:Expires at'] < str(today), 'Last Membership:Type name'] = np.NaN
+df_MembershipCleaned.loc[df_MembershipCleaned['Most Recent Membership Subscription:Expires at'] < str(today), 'Most Recent Membership Subscription:Type name'] = np.NaN
 
-df_Membership_count = pd.DataFrame(df_MembershipCleaned.groupby(['Last Membership:Type name'], dropna=False).size(), columns=['Total'])\
+df_Membership_count = pd.DataFrame(df_MembershipCleaned.groupby(['Most Recent Membership Subscription:Type name'], dropna=False).size(), columns=['Total'])\
     .sort_values(['Total'], ascending=False).reset_index()
 df_Membership_count = df_Membership_count.fillna('Basic Membership')
 
@@ -443,8 +444,8 @@ workbook['How Did You Hear'].add_image(img)
 workbook.save(outputExcelFile)
 
 
-# CHART MEMBERSHIP (FIELD Last Membership:Type name)
-chartLabel = df_Membership_count['Last Membership:Type name'].tolist()
+# CHART MEMBERSHIP (FIELD Most Recent Membership Subscription:Type name)
+chartLabel = df_Membership_count['Most Recent Membership Subscription:Type name'].tolist()
 chartValue = df_Membership_count['Total'].tolist()
 chartLegendPercent = df_Membership_count['Percent'].tolist()
 
